@@ -40,7 +40,7 @@ jobs:
 #          rm -rf /tmp/.buildx-cache
 #          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
       - name: Cache docker build
-        uses: whoan/docker-build-with-cache-action@v5
+        uses: whoan/docker-build-with-cache-action@v5.11.1
         with:
           username: jcushman
           password: "${{ secrets.GITHUB_TOKEN }}"
