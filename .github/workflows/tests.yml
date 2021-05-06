@@ -35,8 +35,8 @@ jobs:
 #          builder: ${{ steps.buildx.outputs.name }}
           push: true
 #          load: true
-          tags: ${{ github.repository }}/web:0.1
-          cache-from: type=registry,ref=${{ github.repository }}/web:0.1
+          tags: ghcr.io/${{ github.repository }}/web:0.1
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/web:0.1
           cache-to: type=inline
 #          cache-from: type=local,src=/tmp/.buildx-cache
 #          cache-to: type=local,dest=/tmp/.buildx-cache-new
