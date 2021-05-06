@@ -44,7 +44,7 @@ jobs:
         with:
           username: jcushman
           password: "${{ secrets.GITHUB_TOKEN }}"
-          registry: ghcr.io
+          registry: docker.pkg.github.com
           compose_file: docker-compose.yml
       - name: Build the docker-compose stack
         run: docker-compose up -d
