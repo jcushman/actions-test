@@ -34,7 +34,7 @@ jobs:
           context: .
 #          builder: ${{ steps.buildx.outputs.name }}
           push: true
-          load: true
+#          load: true
           tags: ${{ github.repository }}/web:0.1
           cache-from: type=registry,ref=${{ github.repository }}/web:0.1
           cache-to: type=inline
