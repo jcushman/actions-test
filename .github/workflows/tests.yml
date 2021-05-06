@@ -12,5 +12,7 @@ jobs:
         run: docker-compose up -d
       - name: Check running containers
         run: docker ps -a
+      - name: Check logs
+        run: docker compose logs
       - name: Run test suite
-        run: docker exec web ls /app
+        run: docker compose exec web ls /app
