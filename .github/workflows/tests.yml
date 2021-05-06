@@ -28,7 +28,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           push: false
           load: true
-          tags: ${{ steps.prep.outputs.tagged_image }}
+          tags: actions-test:0.1
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
