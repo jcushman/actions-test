@@ -4,7 +4,7 @@ services:
         image: registry.lil.tools/library/redis:6.0.11
     web:
         build: .
-        image: actions-test:0.1
+        image: ghcr.io/jcushman/actions-test:0.1
         volumes:
             - .:/app
         depends_on:
