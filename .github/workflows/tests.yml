@@ -57,7 +57,7 @@ jobs:
 #          registry: docker.pkg.github.com
 #          compose_file: docker-compose.yml
       - name: Build the docker-compose stack
-        run: docker-compose up -d
+        run: docker-compose -f docker-compose.yml up -d  # ignore docker-compose.override.yml
       - name: Check running containers
         run: docker ps -a
       - name: Check logs

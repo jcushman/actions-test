@@ -1,0 +1,7 @@
+version: '2.2'
+services:
+    web:
+        build:
+            context: .
+            cache_from:
+                - ghcr.io/jcushman/actions-test/web:0.1
