@@ -33,7 +33,7 @@ jobs:
         if: github.event_name != 'pull_request'
         id: check-need-build
         run: |
-          RETURN_CODE = `docker manifest inspect ghcr.io/${{ github.repository }}/web:0.1 > /dev/null && echo $? || echo $?`
+          RETURN_CODE=`docker manifest inspect ghcr.io/${{ github.repository }}/web:0.1 > /dev/null && echo $? || echo $?`
           echo "::set-output name=need-build::$RETURN_CODE"
 
       - name: Build docker image
