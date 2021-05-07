@@ -22,13 +22,22 @@ jobs:
 #            ${{ runner.os }}-single-buildx
 
       - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check if we need to rebuild
+        if: github.event_name != 'pull_request'
+        id: check-need-build
+        run: |
+          docker manifest inspect ghcr.io/${{ github.repository }}/web:0.1 > /dev/null ; echo $?
+          echo "::set-output name=need-build::$?"
+
       - name: Build docker image
+        if: github.event_name != 'pull_request' and steps.check-need-build.outputs.need-build == '1'
         uses: docker/build-push-action@v2
         with:
           context: .
