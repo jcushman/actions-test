@@ -37,7 +37,7 @@ jobs:
           echo "::set-output name=need-build::$?"
 
       - name: Build docker image
-        if: github.event_name != 'pull_request' and steps.check-need-build.outputs.need-build == '1'
+        if: github.event_name != 'pull_request' && steps.check-need-build.outputs.need-build == '1'
         uses: docker/build-push-action@v2
         with:
           context: .
