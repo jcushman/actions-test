@@ -14,11 +14,48 @@ jobs:
 
       ### build docker image ###
 
+#      - name: Check if we need to rebuild
+#        id: check-need-build
+#        run: |
+#          RETURN_CODE=`docker manifest inspect ${{ env.IMAGE }} > /dev/null && echo $? || echo $?`
+#          echo "::set-output name=need-build::$RETURN_CODE"
+
       - name: Check if we need to rebuild
-        id: check-need-build
         run: |
-          RETURN_CODE=`docker manifest inspect ${{ env.IMAGE }} > /dev/null && echo $? || echo $?`
-          echo "::set-output name=need-build::$RETURN_CODE"
+          import sys
+          print("Python version")
+          print (sys.version)
+
+          rebuild_if_changed = ['Dockerfile']
+          image = "registry.lil.tools/harvardlil/jcushman/actions-test/web"
+
+          import re, hashlib, pathlib
+
+          # get hash of Dockerfile input files
+          hasher = hashlib.sha256()
+          for path in rebuild_if_changed:
+              hasher.update(Path(path).read_bytes())
+          hash = hasher.hexdigest()[:32]
+
+          # see if hash appears in docker-compose.yml
+          docker_compose_path = pathlib.Path('docker-compose.yml')
+          docker_compose = docker_compose_path.read_text()
+          if hash not in docker_compose:
+
+              # if hash not found, increment image version number, append new hash, and insert
+              current_version = re.findall(rf'image: {re.escape(image)}:(.*)', docker_compose)[0]
+              digits = current_version.split('-')[0].split('.')
+              digits[-1] = str(int(digits[-1])+1)
+              new_version = "%s-%s" % (".".join(digits), hash)
+              docker_compose = docker_compose.replace(current_version, new_version)
+              docker_compose_path.write_text(docker_compose)
+              print("%s updated to version %s" % (docker_compose_path, new_version))
+              print("::set-output name=need-build::1")
+
+          else:
+              print("%s is already up to date" % docker_compose_path)
+              print("::set-output name=need-build::0")
+        shell: python
 
       - name: Set up Docker Buildx
         if: steps.check-need-build.outputs.need-build == '1'
@@ -49,6 +86,14 @@ jobs:
           load: true
           tags: ${{ env.IMAGE }}
 
+      - name: Update image tag in git
+        if: github.event_name != 'pull_request' && steps.check-need-build.outputs.need-build == '1'
+        run: |
+          if [[ `git status docker-compose.yml --porcelain` ]] ; then
+            git add docker-compose.yml
+            git commit -m "Bump image version"
+            git push origin develop
+          fi
 
       ### start docker-compose ###
 
