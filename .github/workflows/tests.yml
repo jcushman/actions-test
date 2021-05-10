@@ -105,4 +105,4 @@ jobs:
       - name: Show logs
         run: docker-compose logs
       - name: Run test suite
-        run: docker-compose exec -T web ls /app
+        run: docker-compose -f docker-compose.registry.yml exec -T web ls /app
