@@ -22,10 +22,6 @@ jobs:
 
       - name: Check if we need to rebuild
         run: |
-          import sys
-          print("Python version")
-          print (sys.version)
-
           rebuild_if_changed = ['Dockerfile']
           image = "registry.lil.tools/harvardlil/jcushman/actions-test/web"
 
@@ -34,7 +30,7 @@ jobs:
           # get hash of Dockerfile input files
           hasher = hashlib.sha256()
           for path in rebuild_if_changed:
-              hasher.update(Path(path).read_bytes())
+              hasher.update(pathlib.Path(path).read_bytes())
           hash = hasher.hexdigest()[:32]
 
           # see if hash appears in docker-compose.yml
