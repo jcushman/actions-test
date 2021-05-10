@@ -14,13 +14,8 @@ jobs:
 
       ### build docker image ###
 
-#      - name: Check if we need to rebuild
-#        id: check-need-build
-#        run: |
-#          RETURN_CODE=`docker manifest inspect ${{ env.IMAGE }} > /dev/null && echo $? || echo $?`
-#          echo "::set-output name=need-build::$RETURN_CODE"
-
-      - name: Check if we need to rebuild
+      - name: Get current image and tag name
+        id: get-tag
         run: |
           rebuild_if_changed = ['Dockerfile']
           image = "registry.lil.tools/harvardlil/jcushman/actions-test/web"
@@ -36,22 +31,29 @@ jobs:
           # see if hash appears in docker-compose.yml
           docker_compose_path = pathlib.Path('docker-compose.yml')
           docker_compose = docker_compose_path.read_text()
+          current_version = re.findall(rf'image: {re.escape(image)}:(.*)', docker_compose)[0]
           if hash not in docker_compose:
 
               # if hash not found, increment image version number, append new hash, and insert
-              current_version = re.findall(rf'image: {re.escape(image)}:(.*)', docker_compose)[0]
               digits = current_version.split('-')[0].split('.')
               digits[-1] = str(int(digits[-1])+1)
               new_version = "%s-%s" % (".".join(digits), hash)
               docker_compose = docker_compose.replace(current_version, new_version)
               docker_compose_path.write_text(docker_compose)
               print("%s updated to version %s" % (docker_compose_path, new_version))
-              print("::set-output name=need-build::1")
+              current_version = new_version
 
           else:
               print("%s is already up to date" % docker_compose_path)
-              print("::set-output name=need-build::0")
+
+          print(f"::set-output name=tag::{image}:{current_version}")
         shell: python
+
+      - name: Check if we need to rebuild
+        id: check-need-build
+        run: |
+          RETURN_CODE=`docker manifest inspect ${{ steps.get-tag.outputs.tag }} > /dev/null && echo $? || echo $?`
+          echo "::set-output name=need-build::$RETURN_CODE"
 
       - name: Set up Docker Buildx
         if: steps.check-need-build.outputs.need-build == '1'
@@ -72,7 +74,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.IMAGE }}
+          tags: ${{ steps.get-tag.outputs.tag }}
 
       - name: Build docker image locally for pull request
         if: github.event_name == 'pull_request' && steps.check-need-build.outputs.need-build == '1'
@@ -80,7 +82,7 @@ jobs:
         with:
           context: .
           load: true
-          tags: ${{ env.IMAGE }}
+          tags: ${{ steps.get-tag.outputs.tag }}
 
       - name: Update image tag in git
         if: github.event_name != 'pull_request' && steps.check-need-build.outputs.need-build == '1'
