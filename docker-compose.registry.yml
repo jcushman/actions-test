@@ -1,0 +1,8 @@
+version: '2.2'
+services:
+    web:
+        image: registry.lil.tools/harvardlil/jcushman/actions-test/web:0.1
+        build:
+            context: .
+            cache_from:
+                - registry.lil.tools/harvardlil/jcushman/actions-test/web:0.1

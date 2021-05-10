@@ -54,3 +54,55 @@ jobs:
         run: docker-compose logs
       - name: Run test suite
         run: docker-compose exec -T web ls /app
+
+  build_lil:
+    runs-on: ubuntu-20.04
+
+    env:
+      IMAGE: registry.lil.tools/harvardlil/${{ github.repository }}/web:0.1
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@master
+
+      - name: Login to Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          registry: registry.lil.tools
+          username: ${{ secrets.REPOSITORY_USER }}
+          password: ${{ secrets.REPOSITORY_TOKEN }}
+
+      - name: Check if we need to rebuild
+        id: check-need-build
+        run: |
+          RETURN_CODE=`docker manifest inspect ${{ env.IMAGE }} > /dev/null && echo $? || echo $?`
+          echo "::set-output name=need-build::$RETURN_CODE"
+
+      - name: Build docker image and push
+        if: github.event_name != 'pull_request' && steps.check-need-build.outputs.need-build == '1'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE }}
+
+      - name: Build docker image locally for pull request
+        if: github.event_name == 'pull_request' && steps.check-need-build.outputs.need-build == '1'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE }}
+
+      - name: Build the docker-compose stack
+        run: docker-compose -f docker-compose.registry.yml up -d  # ignore docker-compose.override.yml for CI
+      - name: Show running containers
+        run: docker ps -a
+      - name: Show logs
+        run: docker-compose logs
+      - name: Run test suite
+        run: docker-compose exec -T web ls /app
