@@ -6,9 +6,6 @@ jobs:
   build:
     runs-on: ubuntu-20.04
 
-    env:
-      IMAGE: registry.lil.tools/harvardlil/${{ github.repository }}/web:0.1
-
     steps:
       - uses: actions/checkout@v2
 
@@ -50,7 +47,7 @@ jobs:
         shell: python
 
       - name: Update image tag in git
-        if: github.event_name != 'pull_request' && steps.check-need-build.outputs.need-build == '1'
+        if: github.event_name != 'pull_request'
         run: |
           git config user.email "lil@law.harvard.edu"
           git config user.name "Github Actions"
