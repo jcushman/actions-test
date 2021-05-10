@@ -100,9 +100,23 @@ jobs:
 
       - name: Build the docker-compose stack
         run: docker-compose -f docker-compose.registry.yml up -d  # ignore docker-compose.override.yml for CI
+
+      - name: Wait for docker to be ready
+        run: |
+          i=1
+          until eval "docker-compose exec -T web ls /app"
+          do
+              ((i++))
+              if [ "${i}" -gt 30 ]; then
+                  echo "Timed out waiting for docker to start"
+                  exit 1
+              fi
+              sleep 1
+          done
+        
       - name: Show running containers
         run: docker ps -a
       - name: Show logs
         run: docker-compose logs
       - name: Run test suite
-        run: docker-compose -f docker-compose.registry.yml exec -T web ls /app
+        run: docker-compose exec -T web ls /app
