@@ -15,7 +15,7 @@ jobs:
         id: get-tag
         run: |
           rebuild_if_changed = ['Dockerfile']
-          image = "jcushman/actions-test/web"
+          image = "jcushman/actions-test"
 
           import re, hashlib, pathlib
 
