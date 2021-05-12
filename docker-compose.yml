@@ -1,9 +1,9 @@
 version: '2.2'
 services:
     redis:
-        image: registry.lil.tools/library/redis:6.0.11
+        image: redis:6.0.11
     web:
-        image: registry.lil.tools/harvardlil/jcushman/actions-test/web:0.2-57080bb91f666032c00ab95a8fb323e8
+        image: jcushman/actions-test/web:0.2-57080bb91f666032c00ab95a8fb323e8
         volumes:
             - .:/app
         depends_on:

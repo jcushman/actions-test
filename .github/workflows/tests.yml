@@ -15,7 +15,7 @@ jobs:
         id: get-tag
         run: |
           rebuild_if_changed = ['Dockerfile']
-          image = "registry.lil.tools/harvardlil/jcushman/actions-test/web"
+          image = "jcushman/actions-test/web"
 
           import re, hashlib, pathlib
 
@@ -72,7 +72,6 @@ jobs:
         if: github.event_name != 'pull_request' && steps.check-need-build.outputs.need-build == '1'
         uses: docker/login-action@v1
         with:
-          registry: registry.lil.tools
           username: ${{ secrets.REPOSITORY_USER }}
           password: ${{ secrets.REPOSITORY_TOKEN }}
 
