@@ -103,4 +103,4 @@ jobs:
       ### run tests ###
 
       - name: Run test suite
-        run: docker-compose exec -T web ls /app
+        run: docker-compose exec web ls /app
