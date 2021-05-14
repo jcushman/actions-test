@@ -12,84 +12,22 @@ jobs:
       ### build docker image ###
 
       - name: Get current image and tag name
-        id: get-tag
-        run: |
-          rebuild_if_changed = ['Dockerfile']
-          image = "jcushman/actions-test"
-
-          import re, hashlib, pathlib
-
-          # get hash of Dockerfile input files
-          hasher = hashlib.sha256()
-          for path in rebuild_if_changed:
-              hasher.update(pathlib.Path(path).read_bytes())
-          hash = hasher.hexdigest()[:32]
-
-          # see if hash appears in docker-compose.yml
-          docker_compose_path = pathlib.Path('docker-compose.yml')
-          docker_compose = docker_compose_path.read_text()
-          current_version = re.findall(rf'image: {re.escape(image)}:(.*)', docker_compose)[0]
-          if hash not in docker_compose:
-
-              # if hash not found, increment image version number, append new hash, and insert
-              digits = current_version.split('-')[0].split('.')
-              digits[-1] = str(int(digits[-1])+1)
-              new_version = "%s-%s" % (".".join(digits), hash)
-              docker_compose = docker_compose.replace(current_version, new_version)
-              docker_compose_path.write_text(docker_compose)
-              print("%s updated to version %s" % (docker_compose_path, new_version))
-              current_version = new_version
-
-          else:
-              print("%s is already up to date" % docker_compose_path)
-
-          print(f"::set-output name=tag::{image}:{current_version}")
-        shell: python
-
-      - name: Update image tag in git
-        if: github.event_name != 'pull_request'
-        run: |
-          git config user.email "lil@law.harvard.edu"
-          git config user.name "Github Actions"
-          if [[ `git status docker-compose.yml --porcelain` ]] ; then
-            git add docker-compose.yml
-            git commit -m "Bump image version"
-            git push origin develop
-          fi
-
-      - name: Check if we need to rebuild
-        id: check-need-build
-        run: |
-          RETURN_CODE=`docker manifest inspect ${{ steps.get-tag.outputs.tag }} > /dev/null && echo $? || echo $?`
-          echo "::set-output name=need-build::$RETURN_CODE"
-
-      - name: Set up Docker Buildx
-        if: steps.check-need-build.outputs.need-build == '1'
-        id: buildx
-        uses: docker/setup-buildx-action@master
-
-      - name: Login to Container Registry
-        if: github.event_name != 'pull_request' && steps.check-need-build.outputs.need-build == '1'
-        uses: docker/login-action@v1
+        id: update-image
+        uses: harvard-lil/docker-compose-update-action@main
         with:
-          username: ${{ secrets.REPOSITORY_USER }}
-          password: ${{ secrets.REPOSITORY_TOKEN }}
-
-      - name: Build docker image and push
-        if: github.event_name != 'pull_request' && steps.check-need-build.outputs.need-build == '1'
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.get-tag.outputs.tag }}
+          rebuild-if-changed: "Dockerfile"
+          image: "jcushman/actions-test"
+          git-email: "lil@law.harvard.edu"
+          registry-user: ${{ secrets.REPOSITORY_USER }}
+          registry-pass: ${{ secrets.REPOSITORY_TOKEN }}
 
       - name: Build docker image locally for pull request
-        if: github.event_name == 'pull_request' && steps.check-need-build.outputs.need-build == '1'
+        if: github.event_name == 'pull_request' && steps.update-image.outputs.updated == '1'
         uses: docker/build-push-action@v2
         with:
           context: .
           load: true
-          tags: ${{ steps.get-tag.outputs.tag }}
+          tags: ${{ steps.update-image.outputs.image-tag }}
 
       ### start docker-compose ###
 
