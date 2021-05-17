@@ -10,16 +10,22 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Should fail
-        run: ls /doesnotexist
         shell: 'script -q -e -c "bash {0}"'
+        run: |
+          ls /doesnotexist
+          echo "OK"
 
       - name: Should work
         shell: 'script -q -e -c "bash --noprofile --norc -eo pipefail {0}"'
-        run: ls /
+        run: |
+          ls /
+          echo "OK"
 
       - name: Should fail 2
         shell: 'script -q -e -c "bash --noprofile --norc -eo pipefail {0}"'
-        run: ls /doesnotexist
+        run: |
+          ls /doesnotexist
+          echo "OK"
 
       ### build docker image ###
 
