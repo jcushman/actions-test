@@ -3,7 +3,7 @@ services:
     redis:
         image: redis:6.0.11
     web:
-        image: jcushman/actions-test:0.4-951b6cf62fa9e7e98a35aaec5fe93a09
+        image: jcushman/actions-test:0.5-916c93cb301006ccc2b1510ddd90116d
         volumes:
             - .:/app
         depends_on:
