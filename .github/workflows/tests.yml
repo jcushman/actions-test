@@ -9,14 +9,26 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Should fail
+        run: ls /doesnotexist
+        shell: 'script -q -e -c "bash {0}"'
+
+      - name: Should work
+        shell: 'script -q -e -c "bash --noprofile --norc -eo pipefail {0}"'
+        run: ls /
+
+      - name: Should fail 2
+        shell: 'script -q -e -c "bash --noprofile --norc -eo pipefail {0}"'
+        run: ls /doesnotexist
+
       ### build docker image ###
 
-      - name: Get current image and tag name
+      - name: Update image tags and rebuild if necessary
         id: update-image
         uses: harvard-lil/docker-compose-update-action@main
         with:
-          rebuild-if-changed: "Dockerfile"
           image: "jcushman/actions-test"
+          rebuild-if-changed: "Dockerfile"
           registry-user: ${{ secrets.REPOSITORY_USER }}
           registry-pass: ${{ secrets.REPOSITORY_TOKEN }}
 
