@@ -17,7 +17,6 @@ jobs:
         with:
           rebuild-if-changed: "Dockerfile"
           image: "jcushman/actions-test"
-          git-email: "lil@law.harvard.edu"
           registry-user: ${{ secrets.REPOSITORY_USER }}
           registry-pass: ${{ secrets.REPOSITORY_TOKEN }}
 
@@ -43,3 +42,16 @@ jobs:
       - name: Run test suite
         shell: 'script -q -e -c "bash {0}"'
         run: docker-compose exec web ls /app
+
+      ### update git ###
+
+      - name: Update image tag in git
+        if: github.event_name == 'push'
+        run: |
+          git config user.email "lil@law.harvard.edu"
+          git config user.name "Github Actions"
+          if [[ `git status docker-compose.yml --porcelain` ]] ; then
+            git add docker-compose.yml
+            git commit -m "Bump image version"
+            git push origin develop || exit 1
+          fi
